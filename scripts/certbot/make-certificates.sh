@@ -58,9 +58,9 @@ $DOCKER_COMPOSE run --rm \
 echo
 echo "✅ Сертификат ${DRY_FLAG:+(dry-run) }создан/обновлён"
 echo "➡ Путь к файлам (в контейнере/volume):"
-echo "    /etc/letsencrypt/live/${CERT_NAME}/fullchain.pem"
-echo "    /etc/letsencrypt/live/${CERT_NAME}/privkey.pem"
+echo "/etc/letsencrypt/live/${CERT_NAME}/fullchain.pem"
+echo "/etc/letsencrypt/live/${CERT_NAME}/privkey.pem"
 echo
 echo "Вставь в nginx:"
-echo "#    ssl_certificate     /etc/letsencrypt/live/${CERT_NAME}/fullchain.pem;"
-echo "#    ssl_certificate_key /etc/letsencrypt/live/${CERT_NAME}/privkey.pem;"
+echo "ssl_certificate     /etc/letsencrypt/live/${CERT_NAME}/fullchain.pem;"
+echo "ssl_certificate_key /etc/letsencrypt/live/${CERT_NAME}/privkey.pem;"
