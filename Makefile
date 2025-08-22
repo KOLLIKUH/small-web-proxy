@@ -36,6 +36,11 @@ certbot-make-certificate-dry: ## Same as above but with --dry-run
 
 
 ##@ NGINX
+
+.PHONY: nginx
+nginx: ## Enter nginx container
+	$(DOCKER_COMPOSE) exec -it proxy.nginx bash
+
 .PHONY: nginx-t
 nginx-t: ## Test nginx conf
 	$(DOCKER_COMPOSE) exec proxy.nginx nginx -t
