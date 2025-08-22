@@ -1,47 +1,64 @@
 DEFAULT_GOAL := help
+
+DOCKER_COMPOSE_CMD := $(shell command -v docker compose >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+DOCKER_COMPOSE := $(DOCKER_COMPOSE_CMD)
+
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-27s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+
+##@ Proxy
+.PHONY: proxy-start
+proxy-start: ## Start proxy
+	$(DOCKER_COMPOSE) up -d
+
+.PHONY: proxy-restart
+proxy-restart: ## Restart proxy services
+	$(DOCKER_COMPOSE) restart
+
+.PHONY: proxy-stop
+proxy-stop: ## Stop proxy services
+	$(DOCKER_COMPOSE) stop
+
+
 ##@ Certbot
+.PHONY: certbot-delete-certificate
+certbot-delete-certificate: ## Delete certificate with provided name (name=example.com)
+	bash ./scripts/certbot/delete-certificate.sh $(name)
 
-.PHONY: certificates
-certificates: ## Show list of certbot certificates
-	sh ./scripts/certificates.sh
+.PHONY: certbot-make-certificate
+certbot-make-certificate: ## Manually fetch ssl certificate for provided domains (make certbot-make-certificate domains="example.com www.example.com")
+	bash ./scripts/certbot/make-certificates.sh $(domains)
 
-.PHONY: delete
-delete: ## Delete certificate with provided name (make delete name=example.com)
-	sh ./scripts/delete.sh $$name
-
-.PHONY: certbot
-certbot: ## Manually fetch ssl certificate for provided domain  using certbot (make certbot domain=example.com)
-	sh ./scripts/certbot.sh $$domain
-
-
-.PHONY: certbot-dry
-certbot-dry: ## Manually fetch ssl certificate for provided domain  using certbot (make certbot domain=example.com) with --dry-run option
-	sh ./scripts/certbot.sh $$domain --dry-run
-
-
+.PHONY: certbot-make-certificate-dry
+certbot-make-certificate-dry: ## Same as above but with --dry-run
+	bash ./scripts/certbot/make-certificates.sh --dry-run $(domains)
 
 
 ##@ NGINX
-.PHONY: t
-t: ## Test nginx conf
-	docker-compose exec nginx nginx -t
 
-.PHONY: restart
-restart: ## Restart nginx container
-	docker-compose restart nginx
+.PHONY: nginx
+nginx: ## Enter nginx container
+	$(DOCKER_COMPOSE) exec -it proxy.nginx sh
 
-.PHONY: reload
-reload: ## Reload nginx configuration
-	docker-compose exec nginx nginx -s reload
+.PHONY: nginx-t
+nginx-t: ## Test nginx conf
+	$(DOCKER_COMPOSE) exec proxy.nginx nginx -t
 
-.PHONY: recreate
-recreate: ## Recreate nginx container
-	docker-compose up -d --force-recreate
+.PHONY: nginx-reload
+nginx-reload: ## Reload nginx configuration
+	$(DOCKER_COMPOSE) exec proxy.nginx nginx -s reload
 
-.PHONY: logs
-logs: ## Get nginx logs
-	docker-compose logs -f nginx
+
+.PHONY: nginx-restart
+nginx-restart: ## Restart nginx container
+	$(DOCKER_COMPOSE) restart proxy.nginx
+
+.PHONY: nginx-recreate
+nginx-recreate: ## Recreate nginx container
+	$(DOCKER_COMPOSE) up -d proxy.nginx --force-recreate
+
+.PHONY: nginx-logs
+nginx-logs: ## Get nginx logs
+	$(DOCKER_COMPOSE) logs -f --tail=100 proxy.nginx
 
