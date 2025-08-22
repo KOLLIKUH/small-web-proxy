@@ -1,0 +1,38 @@
+upstream example.upstream {
+    keepalive 256;
+    server 127.0.0.1:40297 max_fails=0;
+}
+
+#server {
+
+#    listen 443 ssl;
+#    listen [::]:443 ssl;
+
+#    http2 on;
+
+#    listen 443 quic reuseport;
+#    add_header Alt-Svc 'h3=":443"; ma=86400' always;
+
+#    server_name example.com;
+
+#    ssl_certificate /etc/letsencrypt/live/<CERT_NAME>/fullchain.pem;
+#    ssl_certificate_key /etc/letsencrypt/live/<CERT_NAME>/privkey.pem;
+
+#    location / {
+#        proxy_pass http://frontend:3000;
+#    }
+
+#}
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name example.com;
+
+    include acme.conf;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}

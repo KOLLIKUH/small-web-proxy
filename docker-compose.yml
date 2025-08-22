@@ -1,24 +1,22 @@
-version: "3"
 services:
-  nginx:
-    container_name: nginx
-    image: nginx:1.15.12-alpine
+  proxy.nginx:
+    image: nginx:1.29-alpine3.22
     volumes:
       - ./configs/nginx.conf:/etc/nginx/nginx.conf
       - ./configs/conf.d:/etc/nginx/conf.d
-      - ./configs/sites-enabled:/etc/nginx/sites-enabled
-      - ./configs/acme:/etc/nginx/acme
+      - ./configs/acme.conf:/etc/nginx/acme.conf
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/html
-    network_mode: host
     restart: always
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    network_mode: host
+    container_name: proxy.nginx
 
-  certbot:
-    container_name: certbot
-    image: certbot/certbot:v0.33.1
+  proxy.certbot:
+    image: certbot/certbot:v4.2.0
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/html
     restart: always
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    container_name: proxy.certbot
